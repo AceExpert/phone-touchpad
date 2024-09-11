@@ -11,10 +11,6 @@ pyautogui.PAUSE = 0
 #threads: list[Thread] = []
 alt: bool = False
 
-def sdrag(x, y):
-    with pyautogui.hold('shift'):
-        pyautogui.drag(x, y)
-
 @server.event
 async def on_ready() -> None:
     print("Listening at", f"ws://{server.address}:{server.port}")
