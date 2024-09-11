@@ -1,0 +1,4 @@
+c-websockets
+pywin32
+PyAutoGUI
+Flask

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0" />    
+        <style>
+            * {
+                box-sizing: border-box;
+                padding: 0px;
+                margin: 0px;
+            }
+            #keyboard {
+                width: 100%;
+                font-size: 15px;
+                height: 30px;
+                outline: none;
+                border: 0px;
+                background-color: aliceblue;
+                border-bottom: 1px solid dodgerblue;
+            }
+            body {
+                overscroll-behavior: contain;
+            }
+            #maindiv {
+                overflow-y: hidden;
+                overflow-x: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div style="display: flex; flex-direction: column; width: 100%; height: 100%; padding: 5px;" id="maindiv">
+            <input id="keyboard"/>
+            <p id="key" style="user-select: none;"></p>
+            <p id="touch" style="user-select: none;"></p>
+            <p id="three" style="user-select: none;"></p>
+
+        </div>
+        
+        <script>
+            let ws = new WebSocket(`ws://${window.location.host.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0]}:4000`)
+            const keyMap = {
+                8: 'backspace',
+                13: 'enter',
+            }
+            let trackRec = {
+                time: new Date,
+                cds: [0,0],
+                touchs: null,
+                scrolltime: new Date,
+                dubtap: null,
+                drag: false,
+                dragS: false,
+                three: false,
+                scroll: false,
+                threetime: new Date,
+                text: '',
+            }
+
+            function matchLen(t1, t2) {
+                let m = 0
+                for (let [l, i] of t1.split("").map((l, i) => [l, i])) {
+                    if(l === t2[i]) {
+                        m=i;
+                    } else break;
+                }
+                return [t2.slice(m+1), t1.length - m - 1]
+            }
+
+            ws.onopen = e => {
+                
+            }
+            document.getElementById("keyboard").oninput = e => {
+                
+                if(!trackRec.text.length) {
+                    ws.send(JSON.stringify({'key': [e.target.value, 0]}))
+                } else
+                ws.send(JSON.stringify({'key': matchLen(trackRec.text, e.target.value)}));
+                trackRec.text = e.target.value;
+            }
+            document.getElementById("keyboard").onkeydown = e => {
+                if([8, 13].includes(e.keyCode)) {
+                    ws.send(JSON.stringify({'key': keyMap[e.keyCode]}))
+                }
+            }
+            document.documentElement.ontouchstart = e => {
+                document.getElementById('touch').innerHTML = 'touch start'
+                trackRec.touchs = new Date;
+                trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
+                if(trackRec.dubtap && (new Date - trackRec.dubtap < 600) && e.touches.length === 1) {
+                    trackRec.drag = true
+                    trackRec.dragS = true;
+                    ws.send(JSON.stringify({drag: [0, 0], start: true}))
+                }
+            }
+            document.documentElement.ontouchmove = e => {
+                document.getElementById('key').innerHTML = e.touches[0].screenX + ' ' + e.touches[0].screenY;
+                if(((new Date) - trackRec.time) >= 0 && e.touches.length === 1 && !trackRec.scroll) {
+                    //ws.send(JSON.stringify({touch: [(e.touches[0].clientX - trackRec.cds[0]) / window.innerWidth, (e.touches[0].clientY - trackRec.cds[1]) / window.innerHeight], 'start': false}))
+                    ws.send(JSON.stringify({'touch': [(e.touches[0].clientX - trackRec.cds[0]) / ((new Date) - trackRec.time), (e.touches[0].clientY - trackRec.cds[1]) / ((new Date) - trackRec.time)] }))
+                    trackRec.time = new Date;
+                    trackRec.dragS = false
+                    trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
+                
+                } else if (((new Date) - trackRec.scrolltime) >= 0 && e.touches.length === 2) {
+                    trackRec.scroll = true;
+                    ws.send(JSON.stringify({scroll: ( e.touches[0].clientY - trackRec.cds[1] ) / (new Date - trackRec.scrolltime)}))
+                    //ws.send(JSON.stringify({scroll: ( e.touches[0].clientY - trackRec.cds[1] ) / (window.innerHeight)}))
+                    trackRec.scrolltime = new Date;
+                    trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
+                } else if((Math.abs(e.touches[0].clientX - trackRec.cds[0]) > 0 || Math.abs(e.touches[0].clientY - trackRec.cds[1]) > 0) && e.touches.length === 3) {
+                    document.getElementById('three').innerHTML = 'Three gesture'
+                    trackRec.three = true;
+                    trackRec.threetime = new Date;
+                    if(true) {
+                        ws.send(JSON.stringify({three: [(e.touches[0].clientX - trackRec.cds[0]), (e.touches[0].clientY - trackRec.cds[1])]}))
+                        trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
+                    }
+                }
+            }
+            document.documentElement.ontouchend = e => {
+                document.getElementById('touch').innerHTML = 'touch end'
+
+                trackRec.touchs = null;
+                if(!trackRec.drag) trackRec.dubtap = new Date;
+                else {
+                    trackRec.drag = false
+                    ws.send(JSON.stringify({drag: [0, 0], 'end': true}))
+                    trackRec.dubtap = null;
+                }
+                if(trackRec.scroll) {
+                    trackRec.scroll = false;
+                }
+                if(((new Date) - trackRec.touchs) < 300) {
+                    ws.send(JSON.stringify({tap: 'tap'}))
+                }
+                if(trackRec.three) {
+                    document.getElementById('three').innerHTML = 'three gesture end' 
+                    ws.send(JSON.stringify({'threeEnd': 'ddd'}))
+                    trackRec.three = false
+                }
+            }
+            //.documentElement.onclick = e => {
+            //    ws.send(JSON.stringify({tap: 'tap'}))
+            //}
+        </script>
+    </body>
+</html>
