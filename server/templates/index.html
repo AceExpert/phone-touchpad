@@ -103,7 +103,7 @@
                 
                 } else if (((new Date) - trackRec.scrolltime) >= 0 && e.touches.length === 2) {
                     trackRec.scroll = true;
-                    ws.send(JSON.stringify({scroll: ( e.touches[0].clientY - trackRec.cds[1] ) / (new Date - trackRec.scrolltime)}))
+                    ws.send(JSON.stringify({scroll: [( e.touches[0].clientY - trackRec.cds[1] ) / (new Date - trackRec.scrolltime), ( e.touches[0].clientX - trackRec.cds[0] ) / (new Date - trackRec.scrolltime)]}))
                     //ws.send(JSON.stringify({scroll: ( e.touches[0].clientY - trackRec.cds[1] ) / (window.innerHeight)}))
                     trackRec.scrolltime = new Date;
                     trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
