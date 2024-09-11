@@ -42,3 +42,5 @@ Your server is up and running at http://192.168.43.155:5000
 
 ### Special Features
 - All your Phone keyboard's features like autocorrect, keyboard suggestions, auto capitalization, punctuations etc. are coupled with this, so the text you enter there would appear exactly as it is on your pc.
+
+*Note: I will be completely removing dependency on PyAutoGUI soon*
