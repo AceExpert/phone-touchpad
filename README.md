@@ -13,6 +13,9 @@ Run `main.py`
 
 The command prompt will show you the link to the server, open the link on your mobile phone or tablet and it will automatically connect to your laptop and you are ready to use your phone as a touchpad, you can use the **blue input box** to use the **keyboard**.
 
+Incase your ip-address is 192.168.43.155
+Your server is up and running at http://192.168.43.155:5000
+
 ## Touchpad
 
 ### General
