@@ -98,14 +98,14 @@
             }
             document.documentElement.ontouchmove = e => {
                 document.getElementById('key').innerHTML = e.touches[0].screenX + ' ' + e.touches[0].screenY;
-                if(((new Date) - trackRec.time) >= 10 && e.touches.length === 1 && !trackRec.scroll) {
+                if(((new Date) - trackRec.time) >= 0 && e.touches.length === 1 && !trackRec.scroll) {
                     ws.send(JSON.stringify({touch: [(e.touches[0].clientX - trackRec.cds[0]) / window.innerWidth, (e.touches[0].clientY - trackRec.cds[1]) / window.innerHeight], 'start': false}))
                     //ws.send(JSON.stringify({'touch': [(e.touches[0].clientX - trackRec.cds[0]) / ((new Date) - trackRec.time), (e.touches[0].clientY - trackRec.cds[1]) / ((new Date) - trackRec.time)] }))
                     trackRec.time = new Date;
                     trackRec.dragS = false
                     trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
                 
-                } else if (((new Date) - trackRec.scrolltime) >= 10 && e.touches.length === 2) {
+                } else if (((new Date) - trackRec.scrolltime) >= 0 && e.touches.length === 2) {
                     trackRec.scroll = true;
                     //ws.send(JSON.stringify({scroll: [( e.touches[0].clientY - trackRec.cds[1] ) / (new Date - trackRec.scrolltime), ( e.touches[0].clientX - trackRec.cds[0] ) / (new Date - trackRec.scrolltime)]}))
                     ws.send(JSON.stringify({scroll: [( e.touches[0].clientY - trackRec.cds[1] ) / (window.innerHeight), ( e.touches[0].clientX - trackRec.cds[0] ) / window.innerWidth]}))
