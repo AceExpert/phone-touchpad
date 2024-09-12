@@ -36,16 +36,21 @@ async def on_message(message: ws.Message) -> None:
 
     elif coords := message.data.get('touch', None):
         #pyautogui.moveRel(coords[0] * size[0] * .2, coords[1] * size[1] * .2, .1)
-        win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, int(coords[0] * size[0] * .05), int(coords[1] * size[1] * .05))
+        win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, int(coords[0] * size[0] * 1), int(coords[1] * size[1] * 1))
     elif message.data.get('tap', None):
         
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
 
+    elif message.data.get('rightTap', None):
+        
+        win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, 0, 0)
+        win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
+
     elif scroll := message.data.get('scroll', None):
         
-        win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, win32api.GetCursorPos()[0], win32api.GetCursorPos()[1], int(scroll[0] * size[1] * 0.05), 0)
-        win32api.mouse_event(win32con.MOUSEEVENTF_HWHEEL, win32api.GetCursorPos()[0], win32api.GetCursorPos()[1], int(scroll[1] * size[0] * 0.05), 0)
+        win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, win32api.GetCursorPos()[0], win32api.GetCursorPos()[1], int(scroll[0] * size[1] * 1), 0)
+        win32api.mouse_event(win32con.MOUSEEVENTF_HWHEEL, win32api.GetCursorPos()[0], win32api.GetCursorPos()[1], int(scroll[1] * size[0] * 1), 0)
 
     elif coords := message.data.get('drag', None):
         if message.data.get('start', None):

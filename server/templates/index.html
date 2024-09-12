@@ -54,6 +54,7 @@
                 scroll: false,
                 threetime: new Date,
                 text: '',
+                rightTap: null,
             }
 
             function matchLen(t1, t2) {
@@ -84,30 +85,33 @@
             }
             document.documentElement.ontouchstart = e => {
                 document.getElementById('touch').innerHTML = 'touch start'
-                trackRec.touchs = new Date;
+                if(e.touches.length === 1) trackRec.touchs = new Date;
                 trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
                 if(trackRec.dubtap && (new Date - trackRec.dubtap < 600) && e.touches.length === 1) {
                     trackRec.drag = true
                     trackRec.dragS = true;
                     ws.send(JSON.stringify({drag: [0, 0], start: true}))
                 }
+                if(e.touches.length === 2) {
+                    trackRec.rightTap = new Date;
+                }
             }
             document.documentElement.ontouchmove = e => {
                 document.getElementById('key').innerHTML = e.touches[0].screenX + ' ' + e.touches[0].screenY;
-                if(((new Date) - trackRec.time) >= 0 && e.touches.length === 1 && !trackRec.scroll) {
-                    //ws.send(JSON.stringify({touch: [(e.touches[0].clientX - trackRec.cds[0]) / window.innerWidth, (e.touches[0].clientY - trackRec.cds[1]) / window.innerHeight], 'start': false}))
-                    ws.send(JSON.stringify({'touch': [(e.touches[0].clientX - trackRec.cds[0]) / ((new Date) - trackRec.time), (e.touches[0].clientY - trackRec.cds[1]) / ((new Date) - trackRec.time)] }))
+                if(((new Date) - trackRec.time) >= 10 && e.touches.length === 1 && !trackRec.scroll) {
+                    ws.send(JSON.stringify({touch: [(e.touches[0].clientX - trackRec.cds[0]) / window.innerWidth, (e.touches[0].clientY - trackRec.cds[1]) / window.innerHeight], 'start': false}))
+                    //ws.send(JSON.stringify({'touch': [(e.touches[0].clientX - trackRec.cds[0]) / ((new Date) - trackRec.time), (e.touches[0].clientY - trackRec.cds[1]) / ((new Date) - trackRec.time)] }))
                     trackRec.time = new Date;
                     trackRec.dragS = false
                     trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
                 
-                } else if (((new Date) - trackRec.scrolltime) >= 0 && e.touches.length === 2) {
+                } else if (((new Date) - trackRec.scrolltime) >= 10 && e.touches.length === 2) {
                     trackRec.scroll = true;
-                    ws.send(JSON.stringify({scroll: [( e.touches[0].clientY - trackRec.cds[1] ) / (new Date - trackRec.scrolltime), ( e.touches[0].clientX - trackRec.cds[0] ) / (new Date - trackRec.scrolltime)]}))
-                    //ws.send(JSON.stringify({scroll: ( e.touches[0].clientY - trackRec.cds[1] ) / (window.innerHeight)}))
+                    //ws.send(JSON.stringify({scroll: [( e.touches[0].clientY - trackRec.cds[1] ) / (new Date - trackRec.scrolltime), ( e.touches[0].clientX - trackRec.cds[0] ) / (new Date - trackRec.scrolltime)]}))
+                    ws.send(JSON.stringify({scroll: [( e.touches[0].clientY - trackRec.cds[1] ) / (window.innerHeight), ( e.touches[0].clientX - trackRec.cds[0] ) / window.innerWidth]}))
                     trackRec.scrolltime = new Date;
                     trackRec.cds = [e.touches[0].clientX, e.touches[0].clientY]
-                } else if((Math.abs(e.touches[0].clientX - trackRec.cds[0]) > 0 || Math.abs(e.touches[0].clientY - trackRec.cds[1]) > 0) && e.touches.length === 3) {
+                } else if((Math.abs(e.touches[0].clientX - trackRec.cds[0]) > 10 || Math.abs(e.touches[0].clientY - trackRec.cds[1]) > 10) && e.touches.length === 3) {
                     document.getElementById('three').innerHTML = 'Three gesture'
                     trackRec.three = true;
                     trackRec.threetime = new Date;
@@ -130,9 +134,12 @@
                 if(trackRec.scroll) {
                     trackRec.scroll = false;
                 }
-                if(((new Date) - trackRec.touchs) < 300) {
+                if(trackRec.touchs && ((new Date) - trackRec.touchs) < 300) {
                     ws.send(JSON.stringify({tap: 'tap'}))
                 }
+                if(trackRec.rightTap && ((new Date) - trackRec.rightTap) < 200) {
+                    ws.send(JSON.stringify({rightTap: 'tap'}))
+                } 
                 if(trackRec.three) {
                     document.getElementById('three').innerHTML = 'three gesture end' 
                     ws.send(JSON.stringify({'threeEnd': 'ddd'}))
